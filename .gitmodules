@@ -1,0 +1,6 @@
+[submodule "spaced-repetition-capstone-server"]
+	path = spaced-repetition-capstone-server
+	url = git@github.com:maxjeffwell/spaced-repetition-capstone-server.git
+[submodule "spaced-repetition-capstone-client"]
+	path = spaced-repetition-capstone-client
+	url = git@github.com:maxjeffwell/spaced-repetition-capstone-client.git

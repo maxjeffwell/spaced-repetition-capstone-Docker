@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spaced-repetition-server
+  namespace: spaced-repetition
+  labels:
+    app: spaced-repetition-server
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: spaced-repetition-server
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: spaced-repetition-server
+        tier: backend
+    spec:
+      containers:
+      - name: server
+        image: maxjeffwell/spaced-repetition-capstone-server:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: spaced-repetition-config
+              key: NODE_ENV
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: spaced-repetition-config
+              key: PORT
+        - name: JWT_EXPIRY
+          valueFrom:
+            configMapKeyRef:
+              name: spaced-repetition-config
+              key: JWT_EXPIRY
+        - name: MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: spaced-repetition-secrets
+              key: MONGODB_URI
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: spaced-repetition-secrets
+              key: JWT_SECRET
+        - name: CLIENT_ORIGIN
+          value: "https://yourdomain.com"  # Update with your domain
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: logs
+          mountPath: /app/logs
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: logs
+        emptyDir: {}
+      securityContext:
+        fsGroup: 1001

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: spaced-repetition-client
+  namespace: spaced-repetition
+  labels:
+    app: spaced-repetition-client
+    tier: frontend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  selector:
+    app: spaced-repetition-client
+    tier: frontend

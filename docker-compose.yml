@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # Express API Server
+  server:
+    image: maxjeffwell/spaced-repetition-capstone-server:latest
+    container_name: spaced-repetition-server
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 8080
+      MONGODB_URI: ${MONGODB_URI}
+      JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_change_in_production}
+      JWT_EXPIRY: ${JWT_EXPIRY:-7d}
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:80}
+    ports:
+      - "8080:8080"
+    networks:
+      - spaced-repetition-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8080/api', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # React Client
+  client:
+    image: maxjeffwell/spaced-repetition-capstone-client:latest
+    container_name: spaced-repetition-client
+    environment:
+      REACT_APP_API_BASE_URL: ${REACT_APP_API_BASE_URL:-http://localhost/api}
+    ports:
+      - "5000:80"
+    depends_on:
+      - server
+    networks:
+      - spaced-repetition-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: spaced-repetition-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - server
+      - client
+    networks:
+      - spaced-repetition-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  spaced-repetition-network:
+    driver: bridge

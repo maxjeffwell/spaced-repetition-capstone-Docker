@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spaced-repetition-config
+  namespace: spaced-repetition
+data:
+  # Server configuration
+  NODE_ENV: "production"
+  PORT: "8080"
+  JWT_EXPIRY: "7d"
+
+  # Client configuration
+  REACT_APP_API_BASE_URL: "/api"

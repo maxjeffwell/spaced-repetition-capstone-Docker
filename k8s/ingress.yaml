@@ -1,0 +1,58 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: spaced-repetition-ingress
+  namespace: spaced-repetition
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - yourdomain.com  # Update with your domain
+    - www.yourdomain.com
+    secretName: spaced-repetition-tls
+  rules:
+  - host: yourdomain.com  # Update with your domain
+    http:
+      paths:
+      # API routes
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: spaced-repetition-server
+            port:
+              number: 8080
+      # Client application (React SPA)
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: spaced-repetition-client
+            port:
+              number: 80
+  - host: www.yourdomain.com  # Update with your domain
+    http:
+      paths:
+      # API routes
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: spaced-repetition-server
+            port:
+              number: 8080
+      # Client application
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: spaced-repetition-client
+            port:
+              number: 80
