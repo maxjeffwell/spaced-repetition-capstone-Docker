@@ -100,6 +100,26 @@ See [CICD.md](CICD.md) for GitHub Actions configuration and Docker Hub integrati
 - **Client-Side ML**: WebGPU-accelerated inference in the browser
 - **Real-time Stats**: Live progress tracking with Chart.js and D3.js
 
+## Screenshots
+
+### Homepage
+![Homepage](screenshots/01-homepage.png)
+
+### Login
+![Login](screenshots/02-login.png)
+
+### Dashboard
+![Dashboard](screenshots/03-dashboard.png)
+
+### Learning Session
+![Learning Session](screenshots/04-learning-session.png)
+
+### Statistics
+![Statistics](screenshots/05-statistics.png)
+
+### Progress Tracking
+![Progress Tracking](screenshots/06-progress-tracking.png)
+
 ## License
 
 MIT
