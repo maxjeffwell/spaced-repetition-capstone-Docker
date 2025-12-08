@@ -27,3 +27,35 @@ docker-compose.override.yml
 
 # Kubernetes secrets
 k8s/secrets.yaml
+
+# ArtiForge
+.artiforge/
+
+# Python
+venv/
+env/
+.venv/
+ENV/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+coverage/
+
+# Build artifacts
+build/
+dist/
+*.tsbuildinfo
+.cache/
+.next/
+out/
+.parcel-cache/
+
+# Backup and temporary files
+*.backup
+*.bak
+*.tmp
