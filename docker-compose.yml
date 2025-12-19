@@ -1,23 +1,35 @@
 version: '3.8'
 
 services:
-  # Express API Server
+  # GPU-Accelerated Server (Targeting GTX 1080)
   server:
-    image: maxjeffwell/spaced-repetition-capstone-server:latest
+    build:
+      context: ./spaced-repetition-capstone-server
+      dockerfile: Dockerfile.gpu
     container_name: spaced-repetition-server
+    # Enable NVIDIA GPU support and target GPU 1 (GTX 1080)
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['1']
+              capabilities: [gpu]
     environment:
-      NODE_ENV: ${NODE_ENV:-development}
+      NODE_ENV: development
       PORT: 8080
       MONGODB_URI: ${MONGODB_URI}
       JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_change_in_production}
       JWT_EXPIRY: ${JWT_EXPIRY:-7d}
-      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:80}
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:3000}
     ports:
       - "8080:8080"
+    volumes:
+      - ./spaced-repetition-capstone-server/ml/saved-model:/app/ml/saved-model
     networks:
       - spaced-repetition-network
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8080/api', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      test: ["CMD", "/bin/bash", "-c", "export PATH=$PATH:/usr/bin:/usr/local/bin && node -e \"require('http').get('http://localhost:8080/api', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})\""]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -25,12 +37,14 @@ services:
 
   # React Client
   client:
-    image: maxjeffwell/spaced-repetition-capstone-client:latest
+    build:
+      context: ./spaced-repetition-capstone-client
+      dockerfile: Dockerfile
     container_name: spaced-repetition-client
     environment:
-      REACT_APP_API_BASE_URL: ${REACT_APP_API_BASE_URL:-http://localhost/api}
+      REACT_APP_API_BASE_URL: ${REACT_APP_API_BASE_URL:-http://localhost:8080/api}
     ports:
-      - "5000:80"
+      - "3000:80"
     depends_on:
       - server
     networks:

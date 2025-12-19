@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # GPU-Accelerated Server
+  server-gpu:
+    build:
+      context: ./spaced-repetition-capstone-server
+      dockerfile: Dockerfile.gpu
+    container_name: spaced-repetition-server-gpu
+    # Enable NVIDIA GPU support
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      NODE_ENV: development
+      PORT: 8080
+      MONGODB_URI: ${MONGODB_URI}
+      JWT_SECRET: ${JWT_SECRET:-development-secret}
+      JWT_EXPIRY: 7d
+      CLIENT_ORIGIN: http://localhost:3000
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./spaced-repetition-capstone-server/ml/saved-model:/app/ml/saved-model
+    networks:
+      - spaced-repetition-network
+
+  # Standard React Client (runs on CPU)
+  client:
+    build:
+      context: ./spaced-repetition-capstone-client
+      dockerfile: Dockerfile
+    container_name: spaced-repetition-client
+    environment:
+      REACT_APP_API_BASE_URL: http://localhost:8080/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server-gpu
+    networks:
+      - spaced-repetition-network
+
+networks:
+  spaced-repetition-network:
+    driver: bridge
