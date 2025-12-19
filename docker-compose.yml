@@ -1,20 +1,12 @@
 version: '3.8'
 
 services:
-  # GPU-Accelerated Server (Targeting GTX 1080)
+  # Standard Server (CPU)
   server:
     build:
       context: ./spaced-repetition-capstone-server
-      dockerfile: Dockerfile.gpu
+      dockerfile: Dockerfile
     container_name: spaced-repetition-server
-    # Enable NVIDIA GPU support and target GPU 1 (GTX 1080)
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              device_ids: ['1']
-              capabilities: [gpu]
     environment:
       NODE_ENV: development
       PORT: 8080
