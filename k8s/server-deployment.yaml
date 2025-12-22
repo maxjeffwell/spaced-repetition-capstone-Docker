@@ -52,7 +52,11 @@ spec:
               name: spaced-repetition-secrets
               key: JWT_SECRET
         - name: CLIENT_ORIGIN
-          value: "https://yourdomain.com"  # Update with your domain
+          value: "https://yourdomain.com"
+        - name: AI_PROVIDER
+          value: "local"
+        - name: AI_LOCAL_URL
+          value: "http://llama-service:8080/v1/chat/completions"
         resources:
           requests:
             memory: "256Mi"
