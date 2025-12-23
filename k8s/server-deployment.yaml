@@ -56,7 +56,7 @@ spec:
         - name: AI_PROVIDER
           value: "local"
         - name: AI_LOCAL_URL
-          value: "http://llama-service:8080/v1/chat/completions"
+          value: "http://llama-cpu-service:8080/v1/chat/completions"
         resources:
           requests:
             memory: "256Mi"
