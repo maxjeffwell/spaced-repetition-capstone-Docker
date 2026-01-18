@@ -1,0 +1,27 @@
+name: Trigger K8s Deploy
+
+# No CI workflow exists, so trigger on push with path filters
+on:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitignore'
+      - 'LICENSE'
+
+jobs:
+  trigger-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger IntervalAI deployment
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.DEPLOY_PAT }}
+          repository: maxjeffwell/devops-portfolio-manager
+          event-type: deploy-intervalai
+          client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
+
+      - name: Log trigger
+        run: |
+          echo "Triggered deploy-intervalai for commit ${{ github.sha }}"
