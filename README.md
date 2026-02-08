@@ -73,13 +73,17 @@ See [DOCKER.md](DOCKER.md) for detailed Docker usage instructions.
 
 ## Deployment
 
-### Kubernetes
-See [KUBERNETES.md](KUBERNETES.md) for Kubernetes deployment guide.
+### Production (Kubernetes)
 
-### Current Production
-- Render deployment continues to run in parallel
-- Server: [Render URL]
-- Client: [Render URL]
+The application runs on a self-hosted **K3s cluster** managed via ArgoCD GitOps:
+
+- **Live:** [intervalai.el-jefe.me](https://intervalai.el-jefe.me)
+- **Ingress:** Traefik with automatic TLS via cert-manager + Let's Encrypt
+- **Secrets:** Doppler + External Secrets Operator
+- **CI/CD:** GitHub Actions → Docker Hub → ArgoCD auto-sync
+- **Helm:** Deployed via shared `portfolio-common` library chart
+
+See [KUBERNETES.md](KUBERNETES.md) for detailed Kubernetes deployment guide.
 
 ## CI/CD
 
