@@ -59,3 +59,6 @@ out/
 *.backup
 *.bak
 *.tmp
+
+# Serena MCP server tool state (per-developer; not shared)
+.serena/
