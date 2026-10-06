@@ -572,33 +572,28 @@ Each question maintains a detailed review history:
 
 ## Machine Learning Architecture
 
-### Input Features (8 total)
-1. `memoryStrength` - Current memory strength (0-5)
+### Input Features (model v2, 2026-10-06: 8 base + 16 derived = 24)
+Base features (`ml/advanced-features.js`, mirrored in the client's `src/services/advanced-features.js`):
+1. `memoryStrength` - Current memory strength as stored on the card (1-90)
 2. `difficultyRating` - Question difficulty (0-1)
-3. `timeSinceLastReview` - Days since last review
-4. `successRate` - Historical success percentage
-5. `averageResponseTime` - Average response time in milliseconds
-6. `totalReviews` - Total number of reviews
-7. `consecutiveCorrect` - Consecutive correct answers
-8. `timeOfDay` - Normalized time of day (0-1)
+3. `successRate` - Historical success percentage
+4. `averageResponseTime` - Average response time (seconds inside the model)
+5. `totalReviews` - Total number of reviews
+6. `consecutiveCorrect` - Consecutive correct answers
+7. `timeOfDay` - Normalized time of day (0-1)
+8. `recalled` - Outcome of the answer being graded (1/0)
+
+Derived: log/sqrt/square of memory strength, interaction products (incl. `recalled × memoryStrength`), sin/cos time, velocity/acceleration/confidence. There is deliberately **no elapsed-time input** (`timeSinceLastReview` and its derivatives were removed): v1 learned "next interval ≈ previous interval" from them and collapsed to ~2 days.
+
+### Label (what the model predicts)
+The next interval a growth policy assigns: `recalled ? clamp(round(max(prev × ease, prev + 1)), 1, 90) : 1`, with `ease = clamp(1.3 + 1.2·successRate + 0.05·min(consecutiveCorrect, 10) − 0.6·difficultyRating, 1.3, 3.0)`. Built by `scripts/build-training-matrix.js` (simulation rows + synthetic grid, features from the production code), trained by `scripts/train-model-v2.py`.
 
 ### Neural Network Architecture
-1. **Input Layer**: 8 features
-2. **Dense Layer 1**: 32 neurons, ReLU activation
-3. **Dropout**: 0.2 rate (regularization)
-4. **Dense Layer 2**: 16 neurons, ReLU activation
-5. **Dense Layer 3**: 8 neurons, ReLU activation
-6. **Output Layer**: 1 neuron (predicted interval in days)
-
-### Training Configuration
-- **Loss Function**: Mean Squared Error (MSE)
-- **Optimizer**: Adam
-- **Training Framework**: TensorFlow/Keras (Python)
-- **Export Format**: TensorFlow.js (JSON + binary weights)
+24 → Dense 128 (ReLU) → BatchNorm → Dropout 0.1 → Dense 64 → Dense 32 → Dense 16 → Dense 1 (softplus, days). Huber loss, Adam.
 
 ### Inference Environments
-- **Server**: TensorFlow.js Node (CPU-based)
-- **Client**: TensorFlow.js with WebGPU acceleration (GPU-based)
+- **Client**: TensorFlow.js (WebGPU) loads `public/models/v2/`; predicts BOTH outcomes before grading and sends `predictedIntervals: { ifCorrect, ifIncorrect }`; the server applies the branch matching the graded answer.
+- **Server**: OpenVINO Model Server (`interval_ai`, version 2, input `dense_input` [-1,24]) via `ml/triton-client.js` (KServe v2 REST); used when a client sends no v2 prediction. A legacy single `predictedInterval` is ignored.
 
 ## Use Cases
 
